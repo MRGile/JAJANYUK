@@ -89,7 +89,7 @@ export default function AdminLayout({
               className="md:hidden text-slate-400 hover:text-white p-1 rounded-lg"
               aria-label="Tutup Menu"
             >
-              Tutup
+              X
             </button>
           </div>
 
@@ -226,7 +226,7 @@ export default function AdminLayout({
               
               <span>
                 Hari ini, {currentTime?.toLocaleDateString("id-ID", {
-                  day: "numeric",
+                  day: "2-digit", 
                   month: "long",
                   year: "numeric",
                   timeZone: "Asia/Jakarta",
