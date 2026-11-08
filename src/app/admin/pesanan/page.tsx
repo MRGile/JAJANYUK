@@ -532,7 +532,7 @@ export default function ManajemenPesananPage() {
                 onClick={() => setActiveModalOrderId(null)}
                 className="text-slate-400 hover:text-white text-xl p-1 rounded-lg"
               >
-                Tutup
+                X
               </button>
             </div>
 
@@ -621,7 +621,7 @@ export default function ManajemenPesananPage() {
                   onClick={() => setActiveModalOrderId(null)}
                   className="px-4 py-2 rounded-xl border border-gray-300 text-slate-700 font-semibold text-xs hover:bg-gray-50 transition-colors cursor-pointer"
                 >
-                  Tutup
+                  X
                 </button>
                 <button
                   type="button"
