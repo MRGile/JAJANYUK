@@ -282,7 +282,7 @@ export default function TenantPage() {
                     {tenant.name}
                   </h3>
 
-                  <p className="mt-3 min-h-[48px] text-sm leading-6 text-[#9B8879]">
+                  <p className="mt-3 min-h-12 text-sm leading-6 text-[#9B8879]">
                     {tenant.description}
                   </p>
 
