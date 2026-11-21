@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-
+import { JollySelect } from "@/components/ui/select";
+import RubberSegment from "@/components/ui/RubberSegment";
 export default function ManajemenPesananPage() {
   const [statusFilter, setStatusFilter] = useState<"semua" | "menunggu" | "diproses" | "selesai" | "dibatalkan">("semua");
   const [tenantFilter, setTenantFilter] = useState<"semua" | "burger" | "mie" | "snack" | "es">("semua");
@@ -30,86 +31,41 @@ export default function ManajemenPesananPage() {
 
       {/* Filter and Controls Card */}
       <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-4">
-        {/* Status Tabs */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="inline-flex flex-wrap p-1 bg-gray-100 rounded-xl text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setStatusFilter("semua")}
-              className={`px-3.5 py-2 rounded-lg transition-all ${
-                statusFilter === "semua"
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-gray-500 hover:text-slate-900"
-              }`}
-            >
-              Semua Pesanan
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("menunggu")}
-              className={`px-3.5 py-2 rounded-lg transition-all ${
-                statusFilter === "menunggu"
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-gray-500 hover:text-slate-900"
-              }`}
-            >
-               Menunggu (2)
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("diproses")}
-              className={`px-3.5 py-2 rounded-lg transition-all ${
-                statusFilter === "diproses"
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-gray-500 hover:text-slate-900"
-              }`}
-            >
-               Diproses (2)
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("selesai")}
-              className={`px-3.5 py-2 rounded-lg transition-all ${
-                statusFilter === "selesai"
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-gray-500 hover:text-slate-900"
-              }`}
-            >
-               Selesai (4)
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("dibatalkan")}
-              className={`px-3.5 py-2 rounded-lg transition-all ${
-                statusFilter === "dibatalkan"
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-gray-500 hover:text-slate-900"
-              }`}
-            >
-               Dibatalkan (1)
-            </button>
-          </div>
 
-          {/* Tenant Filter Dropdown */}
-          <div className="flex items-center gap-2 self-start lg:self-auto">
-            <span className="text-xs font-semibold text-gray-500">Filter Tenant:</span>
-            <select
-              value={tenantFilter}
-              onChange={(e) =>
-                setTenantFilter(
-                  e.target.value as "semua" | "burger" | "mie" | "snack" | "es"
-                )
-              }
-              className="text-xs font-semibold bg-gray-50 border border-gray-300 text-slate-800 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
-            >
-              <option value="semua">Semua Tenant Kios</option>
-              <option value="burger"> Burger Bites</option>
-              <option value="mie"> Mie Berkah</option>
-              <option value="snack"> Snack Corner</option>
-              <option value="es"> Es & Segar</option>
-            </select>
-          </div>
-        </div>
+      {/* Status Tabs */}
+      <div className="min-w-0 max-w-full overflow-x-auto self-start">
+        <RubberSegment
+          items={[
+            { value: "semua", label: "Semua Pesanan" },
+            { value: "menunggu", label: "Menunggu (2)" },
+            { value: "diproses", label: "Diproses (2)" },
+            { value: "selesai", label: "Selesai (4)" },
+            { value: "dibatalkan", label: "Dibatalkan (1)" },
+          ]}
+          value={statusFilter}
+          onChange={(nextValue) =>
+            setStatusFilter(
+              nextValue as
+                | "semua"
+                | "menunggu"
+                | "diproses"
+                | "selesai"
+                | "dibatalkan"
+            )
+          }
+          trackColor="#f3f4f6"
+          thumbColor="#ffffff"
+          textColor="#64748b"
+          activeTextColor="#0f172a"
+          size="sm"
+          radius={12}
+          inset={3}
+          equalSlots={false}
+          draggable
+          className="w-max"
+        />
+      </div>
+
       </div>
 
       {/* Orders Table (Explicit JSX, NO Arrays) */}

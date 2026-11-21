@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import RubberSegment from "@/components/ui/RubberSegment";
 
 export default function LaporanStatistikPage() {
-  const [period, setPeriod] = useState<"harian" | "mingguan" | "bulanan">("harian");
+  const [period, setPeriod] = useState<
+  "harian" | "mingguan" | "bulanan"
+>("harian");
 
   return (
     <div className="space-y-8">
@@ -19,41 +22,31 @@ export default function LaporanStatistikPage() {
         </div>
 
         {/* Period Selector Tabs */}
-        <div className="flex items-center gap-3">
-          <div className="inline-flex p-1 bg-gray-100 rounded-xl text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setPeriod("harian")}
-              className={`px-4 py-2 rounded-lg transition-all ${
-                period === "harian"
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-gray-500 hover:text-slate-900"
-              }`}
-            >
-              Harian (Hari Ini)
-            </button>
-            <button
-              type="button"
-              onClick={() => setPeriod("mingguan")}
-              className={`px-4 py-2 rounded-lg transition-all ${
-                period === "mingguan"
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-gray-500 hover:text-slate-900"
-              }`}
-            >
-              Mingguan (7 Hari)
-            </button>
-            <button
-              type="button"
-              onClick={() => setPeriod("bulanan")}
-              className={`px-4 py-2 rounded-lg transition-all ${
-                period === "bulanan"
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-gray-500 hover:text-slate-900"
-              }`}
-            >
-              Bulanan (30 Hari)
-            </button>
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="min-w-0 max-w-full overflow-x-auto">
+            <RubberSegment
+              items={[
+                { value: "harian", label: "Harian (Hari Ini)" },
+                { value: "mingguan", label: "Mingguan (7 Hari)" },
+                { value: "bulanan", label: "Bulanan (30 Hari)" },
+              ]}
+              value={period}
+              onChange={(nextValue) =>
+                setPeriod(
+                  nextValue as "harian" | "mingguan" | "bulanan"
+                )
+              }
+              trackColor="#f3f4f6"
+              thumbColor="#ffffff"
+              textColor="#64748b"
+              activeTextColor="#0f172a"
+              size="sm"
+              radius={12}
+              inset={3}
+              equalSlots={false}
+              draggable
+              className="w-max"
+            />
           </div>
 
           <button
@@ -61,7 +54,6 @@ export default function LaporanStatistikPage() {
             onClick={() => alert("Laporan rekap berhasil diunduh!")}
             className="hidden sm:inline-flex items-center gap-1.5 bg-white border border-gray-200 text-slate-700 hover:bg-gray-50 px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs cursor-pointer"
           >
-            
             <span>Unduh Laporan</span>
           </button>
         </div>
