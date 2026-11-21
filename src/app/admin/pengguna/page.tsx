@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import RubberSegment from "@/components/ui/RubberSegment";
+import {animate,motion,useMotionValue,useReducedMotion,useTransform,} from "motion/react";
+
 
 export default function ManajemenPenggunaPage() {
   const [roleFilter, setRoleFilter] = useState<"semua" | "siswa" | "kasir" | "owner">("semua");
@@ -79,56 +82,36 @@ export default function ManajemenPenggunaPage() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {/* Table Filter Tabs */}
         <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="inline-flex p-1 bg-gray-100 rounded-xl text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setRoleFilter("semua")}
-              className={`px-4 py-2 rounded-lg transition-all ${
-                roleFilter === "semua"
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-gray-500 hover:text-slate-900"
-              }`}
-            >
-              Semua Pengguna
-            </button>
-            <button
-              type="button"
-              onClick={() => setRoleFilter("siswa")}
-              className={`px-4 py-2 rounded-lg transition-all ${
-                roleFilter === "siswa"
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-gray-500 hover:text-slate-900"
-              }`}
-            >
-               Siswa
-            </button>
-            <button
-              type="button"
-              onClick={() => setRoleFilter("kasir")}
-              className={`px-4 py-2 rounded-lg transition-all ${
-                roleFilter === "kasir"
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-gray-500 hover:text-slate-900"
-              }`}
-            >
-               Kasir
-            </button>
-            <button
-              type="button"
-              onClick={() => setRoleFilter("owner")}
-              className={`px-4 py-2 rounded-lg transition-all ${
-                roleFilter === "owner"
-                  ? "bg-white text-slate-900 shadow-xs font-bold"
-                  : "text-gray-500 hover:text-slate-900"
-              }`}
-            >
-               Owner
-            </button>
-          </div>
+
+          <RubberSegment
+            items={[
+              { value: "semua", label: "Semua Pengguna" },
+              { value: "siswa", label: "Siswa" },
+              { value: "kasir", label: "Kasir" },
+              { value: "owner", label: "Owner" },
+            ]}
+            value={roleFilter}
+            onChange={(nextValue) =>
+              setRoleFilter(
+                nextValue as "semua" | "siswa" | "kasir" | "owner"
+              )
+            }
+            trackColor="#f3f4f6"
+            thumbColor="#ffffff"
+            textColor="#64748b"
+            activeTextColor="#0f172a"
+            size="md"
+            radius={12}
+            inset={3}
+            equalSlots
+            draggable
+            className="self-start sm:self-auto"
+          />
 
           <div className="text-xs text-gray-400 font-medium">
             Menampilkan data pengguna aktif sistem
           </div>
+
         </div>
 
         {/* Users Table (Explicit JSX, NO Arrays) */}

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import RubberSegment from "@/components/ui/RubberSegment";
+import {animate,motion,useMotionValue,useReducedMotion,useTransform,} from "motion/react";
 
 export default function AdminDashboardPage() {
   const [chartPeriod, setChartPeriod] = useState<"7d" | "30d" | "90d">("7d");
@@ -134,41 +136,27 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="inline-flex p-1 bg-gray-100 rounded-xl self-start sm:self-auto text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => setChartPeriod("7d")}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
-                  chartPeriod === "7d"
-                    ? "bg-white text-slate-900 shadow-xs font-bold"
-                    : "text-gray-500 hover:text-slate-900"
-                }`}
-              >
-                7 Hari
-              </button>
-              <button
-                type="button"
-                onClick={() => setChartPeriod("30d")}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
-                  chartPeriod === "30d"
-                    ? "bg-white text-slate-900 shadow-xs font-bold"
-                    : "text-gray-500 hover:text-slate-900"
-                }`}
-              >
-                30 Hari
-              </button>
-              <button
-                type="button"
-                onClick={() => setChartPeriod("90d")}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
-                  chartPeriod === "90d"
-                    ? "bg-white text-slate-900 shadow-xs font-bold"
-                    : "text-gray-500 hover:text-slate-900"
-                }`}
-              >
-                90 Hari
-              </button>
-            </div>
+            <RubberSegment
+              items={[
+                { value: "7d", label: "7 Hari" },
+                { value: "30d", label: "30 Hari" },
+                { value: "90d", label: "90 Hari" },
+              ]}
+              value={chartPeriod}
+              onChange={(nextValue) =>
+                setChartPeriod(nextValue as "7d" | "30d" | "90d")
+              }
+              trackColor="#f3f4f6"
+              thumbColor="#ffffff"
+              textColor="#64748b"
+              activeTextColor="#0f172a"
+              size="sm"
+              radius={12}
+              inset={3}
+              equalSlots
+              draggable
+              className="self-start sm:self-auto"
+            />
           </div>
 
           {/* Line chart */}
