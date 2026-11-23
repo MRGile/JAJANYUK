@@ -5,7 +5,15 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
-type Tenant = { id: number; name: string; category: string; description: string; status: string; icon: string; color: string };
+type Tenant = {
+  id: number;
+  name: string;
+  category: string;
+  description: string;
+  status: string;
+  icon: string;
+  color: string;
+};
 
 export default function TenantPage() {
   const pathname = usePathname();
