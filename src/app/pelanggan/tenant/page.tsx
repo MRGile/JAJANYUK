@@ -1,52 +1,35 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
-const tenants = [
-  {
-    id: 1,
-    name: "Tenant 1",
-    category: "Makanan berat",
-    description: "Menyediakan berbagai pilihan makanan berat.",
-    status: "Buka",
-    icon: "🍛",
-    color: "bg-orange-100",
-  },
-  {
-    id: 2,
-    name: "Tenant 2",
-    category: "Minuman",
-    description: "Berbagai pilihan minuman segar.",
-    status: "Buka",
-    icon: "🥤",
-    color: "bg-amber-100",
-  },
-  {
-    id: 3,
-    name: "Tenant 3",
-    category: "Snack",
-    description: "Aneka camilan untuk menemani waktu istirahat.",
-    status: "Buka",
-    icon: "🍟",
-    color: "bg-yellow-100",
-  },
-  {
-    id: 4,
-    name: "Tenant 4",
-    category: "Makanan ringan",
-    description: "Pilihan makanan ringan dan jajanan.",
-    status: "Tutup",
-    icon: "🥪",
-    color: "bg-rose-100",
-  },
-];
+type Tenant = { id: number; name: string; category: string; description: string; status: string; icon: string; color: string };
 
 export default function TenantPage() {
   const pathname = usePathname();
   const [search, setSearch] = useState("");
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+
+  useEffect(() => {
+    fetch("/api/tenants")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Gagal memuat tenant");
+        const result = await response.json();
+        return Array.isArray(result.data) ? result.data : [];
+      })
+      .then((rows: Array<{ id: number; name: string; description?: string | null }>) => setTenants(rows.map((tenant) => ({
+        id: tenant.id,
+        name: tenant.name,
+        category: "Tenant kantin",
+        description: tenant.description || "",
+        status: "Buka",
+        icon: "🏪",
+        color: "bg-orange-100",
+      }))))
+      .catch(() => setTenants([]));
+  }, []);
 
   const filteredTenants = tenants.filter((tenant) =>
     `${tenant.name} ${tenant.category}`

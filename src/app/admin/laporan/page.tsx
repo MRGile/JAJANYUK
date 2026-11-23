@@ -1,12 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import RubberSegment from "@/components/ui/RubberSegment";
+
+type ReportData = {
+  summary: { ordersCount: number; completedCount: number; cancelledCount: number; revenue: number; profit: number };
+  daily: Array<{ date: string; ordersCount: number; revenue: number }>;
+  tenants: Array<{ id: number; name: string; ordersCount: number; completedCount: number; cancelledCount: number; revenue: number }>;
+};
+
+function toDateParam(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 export default function LaporanStatistikPage() {
   const [period, setPeriod] = useState<
   "harian" | "mingguan" | "bulanan"
 >("harian");
+  const [report, setReport] = useState<ReportData | null>(null);
+  const [reportError, setReportError] = useState("");
+
+  useEffect(() => {
+    const end = new Date();
+    const start = new Date(end);
+    start.setDate(end.getDate() - (period === "harian" ? 0 : period === "mingguan" ? 6 : 29));
+    const query = new URLSearchParams({ from: toDateParam(start), to: toDateParam(end) });
+
+    fetch(`/api/reports?${query}`)
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Gagal memuat laporan.");
+        return result.data as ReportData;
+      })
+      .then((data) => { setReport(data); setReportError(""); })
+      .catch((error: unknown) => {
+        setReport(null);
+        setReportError(error instanceof Error ? error.message : "Gagal memuat laporan.");
+      });
+  }, [period]);
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
+  const tenantRevenue = report?.tenants.reduce((sum, tenant) => sum + tenant.revenue, 0) ?? 0;
 
   return (
     <div className="space-y-8">
@@ -73,14 +111,10 @@ export default function LaporanStatistikPage() {
           </div>
           <div className="mt-3">
             <div className="text-3xl font-extrabold text-slate-900">
-              {period === "harian" && "842"}
-              {period === "mingguan" && "5.240"}
-              {period === "bulanan" && "22.850"}
+              {report?.summary.ordersCount.toLocaleString("id-ID") ?? "—"}
             </div>
             <p className="text-xs text-gray-400 mt-1">
-              {period === "harian" && "Akumulasi pesanan masuk hari ini"}
-              {period === "mingguan" && "Rata-rata 748 pesanan/hari"}
-              {period === "bulanan" && "Rata-rata 761 pesanan/hari"}
+              {reportError || "Jumlah pesanan dalam periode terpilih"}
             </p>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-amber-500"></div>
@@ -98,14 +132,10 @@ export default function LaporanStatistikPage() {
           </div>
           <div className="mt-3">
             <div className="text-3xl font-extrabold text-slate-900">
-              {period === "harian" && "598"}
-              {period === "mingguan" && "5.092"}
-              {period === "bulanan" && "22.180"}
+              {report?.summary.completedCount.toLocaleString("id-ID") ?? "—"}
             </div>
             <p className="text-xs text-emerald-600 font-semibold mt-1">
-              {period === "harian" && "96.8% rasio keberhasilan"}
-              {period === "mingguan" && "97.1% pesanan sukses tersajikan"}
-              {period === "bulanan" && "97.0% kepuasan layanan selesai"}
+              {report ? `${report.summary.ordersCount ? Math.round(report.summary.completedCount / report.summary.ordersCount * 100) : 0}% selesai` : "Menunggu data dari database"}
             </p>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500"></div>
@@ -123,14 +153,10 @@ export default function LaporanStatistikPage() {
           </div>
           <div className="mt-3">
             <div className="text-3xl font-extrabold text-slate-900">
-              {period === "harian" && "26"}
-              {period === "mingguan" && "148"}
-              {period === "bulanan" && "670"}
+              {report?.summary.cancelledCount.toLocaleString("id-ID") ?? "—"}
             </div>
             <p className="text-xs text-rose-600 font-semibold mt-1">
-              {period === "harian" && "3.2% tingkat pembatalan"}
-              {period === "mingguan" && "2.9% pembatalan karena stok habis"}
-              {period === "bulanan" && "3.0% toleransi normal"}
+              {report ? `${report.summary.ordersCount ? Math.round(report.summary.cancelledCount / report.summary.ordersCount * 100) : 0}% dibatalkan` : "Menunggu data dari database"}
             </p>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-rose-500"></div>
@@ -148,14 +174,10 @@ export default function LaporanStatistikPage() {
           </div>
           <div className="mt-3">
             <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              {period === "harian" && "Rp 10.600.000"}
-              {period === "mingguan" && "Rp 68.450.000"}
-              {period === "bulanan" && "Rp 295.300.000"}
+              {report ? formatCurrency(report.summary.revenue) : "—"}
             </div>
             <p className="text-xs text-emerald-600 font-semibold mt-1">
-              {period === "harian" && "+14% dibanding kemarin"}
-              {period === "mingguan" && "+9.5% pertumbuhan mingguan"}
-              {period === "bulanan" && "Total perputaran uang kantin"}
+              {report ? `Laba kotor ${formatCurrency(report.summary.profit)}` : reportError || "Menunggu data dari database"}
             </p>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-1 bg-amber-500"></div>
@@ -174,110 +196,30 @@ export default function LaporanStatistikPage() {
           </span>
         </div>
 
-        {/* Pure CSS Horizontal Comparison Bars */}
+        {/* Database-backed horizontal comparison bars */}
         <div className="mt-6 space-y-6">
-          {/* Tenant 1: Burger Bites */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-sm">
-              <div className="flex items-center gap-2">
-                
-                <span className="font-bold text-slate-900">Burger Bites</span>
-                <span className="text-xs text-gray-400">(Kategori: Makanan Cepat Saji)</span>
+          {!report && !reportError ? (
+            <p className="py-8 text-center text-sm text-gray-500">Memuat data laporan...</p>
+          ) : reportError ? (
+            <p className="py-8 text-center text-sm text-rose-600">{reportError}</p>
+          ) : report?.tenants.length === 0 ? (
+            <p className="py-8 text-center text-sm text-gray-500">Belum ada data tenant pada periode ini.</p>
+          ) : report?.tenants.map((tenant) => {
+            const share = tenantRevenue ? Math.round(tenant.revenue / tenantRevenue * 100) : 0;
+            return (
+              <div key={tenant.id} className="space-y-2">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="font-bold text-slate-900">{tenant.name}</span>
+                  <span className="text-right text-xs font-semibold text-slate-600">{formatCurrency(tenant.revenue)} · {share}%</span>
+                </div>
+                <div className="h-4 w-full overflow-hidden rounded-full bg-gray-100 p-0.5">
+                  <div style={{ width: `${share}%` }} className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-500" />
+                </div>
               </div>
-              <div className="text-right">
-                <span className="font-extrabold text-amber-600 text-base">
-                  {period === "harian" && "Rp 4.250.000"}
-                  {period === "mingguan" && "Rp 27.500.000"}
-                  {period === "bulanan" && "Rp 118.000.000"}
-                </span>
-                <span className="text-xs text-gray-500 ml-2 font-semibold">40.1%</span>
-              </div>
-            </div>
-            <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden p-0.5">
-              <div
-                style={{ width: "40.1%" }}
-                className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full shadow-xs transition-all duration-500"
-              ></div>
-            </div>
-          </div>
-
-          {/* Tenant 2: Mie Berkah */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-sm">
-              <div className="flex items-center gap-2">
-                
-                <span className="font-bold text-slate-900">Mie Berkah</span>
-                <span className="text-xs text-gray-400">(Kategori: Aneka Mie & Bakso)</span>
-              </div>
-              <div className="text-right">
-                <span className="font-extrabold text-emerald-600 text-base">
-                  {period === "harian" && "Rp 3.120.000"}
-                  {period === "mingguan" && "Rp 20.100.000"}
-                  {period === "bulanan" && "Rp 86.000.000"}
-                </span>
-                <span className="text-xs text-gray-500 ml-2 font-semibold">29.4%</span>
-              </div>
-            </div>
-            <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden p-0.5">
-              <div
-                style={{ width: "29.4%" }}
-                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full shadow-xs transition-all duration-500"
-              ></div>
-            </div>
-          </div>
-
-          {/* Tenant 3: Snack Corner */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-sm">
-              <div className="flex items-center gap-2">
-                
-                <span className="font-bold text-slate-900">Snack Corner</span>
-                <span className="text-xs text-gray-400">(Kategori: Jajanan & Gorengan)</span>
-              </div>
-              <div className="text-right">
-                <span className="font-extrabold text-blue-600 text-base">
-                  {period === "harian" && "Rp 1.950.000"}
-                  {period === "mingguan" && "Rp 12.800.000"}
-                  {period === "bulanan" && "Rp 55.500.000"}
-                </span>
-                <span className="text-xs text-gray-500 ml-2 font-semibold">18.4%</span>
-              </div>
-            </div>
-            <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden p-0.5">
-              <div
-                style={{ width: "18.4%" }}
-                className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full shadow-xs transition-all duration-500"
-              ></div>
-            </div>
-          </div>
-
-          {/* Tenant 4: Es & Segar */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-sm">
-              <div className="flex items-center gap-2">
-                
-                <span className="font-bold text-slate-900">Es & Segar</span>
-                <span className="text-xs text-gray-400">(Kategori: Minuman Dingin & Jus)</span>
-              </div>
-              <div className="text-right">
-                <span className="font-extrabold text-purple-600 text-base">
-                  {period === "harian" && "Rp 1.280.000"}
-                  {period === "mingguan" && "Rp 8.050.000"}
-                  {period === "bulanan" && "Rp 35.800.000"}
-                </span>
-                <span className="text-xs text-gray-500 ml-2 font-semibold">12.1%</span>
-              </div>
-            </div>
-            <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden p-0.5">
-              <div
-                style={{ width: "12.1%" }}
-                className="h-full bg-gradient-to-r from-purple-400 to-purple-500 rounded-full shadow-xs transition-all duration-500"
-              ></div>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
-
       {/* Comparison Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -286,7 +228,7 @@ export default function LaporanStatistikPage() {
             <p className="text-xs text-gray-400">Rekapitulasi pesanan, rasio keberhasilan, dan omset masing-masing kios</p>
           </div>
           <span className="text-xs text-gray-400">
-            Terakhir diperbarui: 13:45 WIB
+            {report ? "Data dari database" : "Menunggu data database"}
           </span>
         </div>
 
@@ -303,158 +245,27 @@ export default function LaporanStatistikPage() {
                 <th className="py-3.5 px-6 text-right">Estimasi Omset</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-sm">
-              {/* Row 1: Burger Bites */}
-              <tr className="hover:bg-amber-50/40 transition-colors">
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  <div className="flex items-center gap-2">
-                    
-                    <span>Burger Bites</span>
-                  </div>
-                </td>
-                <td className="py-4 px-6 text-slate-600">
-                  Makanan Cepat Saji
-                </td>
-                <td className="py-4 px-6 font-semibold text-slate-900">
-                  {period === "harian" && "312"}
-                  {period === "mingguan" && "2.050"}
-                  {period === "bulanan" && "9.120"}
-                </td>
-                <td className="py-4 px-6 text-emerald-600 font-medium">
-                  {period === "harian" && "298"}
-                  {period === "mingguan" && "1.990"}
-                  {period === "bulanan" && "8.850"}
-                </td>
-                <td className="py-4 px-6 text-rose-600 font-medium">
-                  {period === "harian" && "14"}
-                  {period === "mingguan" && "60"}
-                  {period === "bulanan" && "270"}
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    95.5%
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right font-extrabold text-slate-900">
-                  {period === "harian" && "Rp 4.250.000"}
-                  {period === "mingguan" && "Rp 27.500.000"}
-                  {period === "bulanan" && "Rp 118.000.000"}
-                </td>
-              </tr>
-
-              {/* Row 2: Mie Berkah */}
-              <tr className="hover:bg-amber-50/40 transition-colors">
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  <div className="flex items-center gap-2">
-                    
-                    <span>Mie Berkah</span>
-                  </div>
-                </td>
-                <td className="py-4 px-6 text-slate-600">
-                  Makanan Tradisional
-                </td>
-                <td className="py-4 px-6 font-semibold text-slate-900">
-                  {period === "harian" && "244"}
-                  {period === "mingguan" && "1.520"}
-                  {period === "bulanan" && "6.710"}
-                </td>
-                <td className="py-4 px-6 text-emerald-600 font-medium">
-                  {period === "harian" && "238"}
-                  {period === "mingguan" && "1.480"}
-                  {period === "bulanan" && "6.530"}
-                </td>
-                <td className="py-4 px-6 text-rose-600 font-medium">
-                  {period === "harian" && "6"}
-                  {period === "mingguan" && "40"}
-                  {period === "bulanan" && "180"}
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    97.5%
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right font-extrabold text-slate-900">
-                  {period === "harian" && "Rp 3.120.000"}
-                  {period === "mingguan" && "Rp 20.100.000"}
-                  {period === "bulanan" && "Rp 86.000.000"}
-                </td>
-              </tr>
-
-              {/* Row 3: Snack Corner */}
-              <tr className="hover:bg-amber-50/40 transition-colors">
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  <div className="flex items-center gap-2">
-                    
-                    <span>Snack Corner</span>
-                  </div>
-                </td>
-                <td className="py-4 px-6 text-slate-600">
-                  Camilan & Snack
-                </td>
-                <td className="py-4 px-6 font-semibold text-slate-900">
-                  {period === "harian" && "185"}
-                  {period === "mingguan" && "1.130"}
-                  {period === "bulanan" && "4.890"}
-                </td>
-                <td className="py-4 px-6 text-emerald-600 font-medium">
-                  {period === "harian" && "181"}
-                  {period === "mingguan" && "1.102"}
-                  {period === "bulanan" && "4.780"}
-                </td>
-                <td className="py-4 px-6 text-rose-600 font-medium">
-                  {period === "harian" && "4"}
-                  {period === "mingguan" && "28"}
-                  {period === "bulanan" && "110"}
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    97.8%
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right font-extrabold text-slate-900">
-                  {period === "harian" && "Rp 1.950.000"}
-                  {period === "mingguan" && "Rp 12.800.000"}
-                  {period === "bulanan" && "Rp 55.500.000"}
-                </td>
-              </tr>
-
-              {/* Row 4: Es & Segar */}
-              <tr className="hover:bg-amber-50/40 transition-colors">
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  <div className="flex items-center gap-2">
-                    
-                    <span>Es & Segar</span>
-                  </div>
-                </td>
-                <td className="py-4 px-6 text-slate-600">
-                  Minuman Segar
-                </td>
-                <td className="py-4 px-6 font-semibold text-slate-900">
-                  {period === "harian" && "101"}
-                  {period === "mingguan" && "540"}
-                  {period === "bulanan" && "2.130"}
-                </td>
-                <td className="py-4 px-6 text-emerald-600 font-medium">
-                  {period === "harian" && "99"}
-                  {period === "mingguan" && "520"}
-                  {period === "bulanan" && "2.020"}
-                </td>
-                <td className="py-4 px-6 text-rose-600 font-medium">
-                  {period === "harian" && "2"}
-                  {period === "mingguan" && "20"}
-                  {period === "bulanan" && "110"}
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-block px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    98.0%
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right font-extrabold text-slate-900">
-                  {period === "harian" && "Rp 1.280.000"}
-                  {period === "mingguan" && "Rp 8.050.000"}
-                  {period === "bulanan" && "Rp 35.800.000"}
-                </td>
-              </tr>
+                        <tbody className="divide-y divide-gray-100 text-sm">
+              {!report && !reportError ? (
+                <tr><td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-500">Memuat data laporan...</td></tr>
+              ) : reportError ? (
+                <tr><td colSpan={7} className="px-6 py-10 text-center text-sm text-rose-600">{reportError}</td></tr>
+              ) : report?.tenants.length === 0 ? (
+                <tr><td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-500">Belum ada data tenant pada periode ini.</td></tr>
+              ) : report?.tenants.map((tenant) => {
+                const successRate = tenant.ordersCount ? Math.round(tenant.completedCount / tenant.ordersCount * 100) : 0;
+                return (
+                  <tr key={tenant.id} className="hover:bg-amber-50/40">
+                    <td className="px-6 py-4 font-bold text-slate-900">{tenant.name}</td>
+                    <td className="px-6 py-4 text-slate-600">—</td>
+                    <td className="px-6 py-4 font-semibold">{tenant.ordersCount.toLocaleString("id-ID")}</td>
+                    <td className="px-6 py-4 font-medium text-emerald-600">{tenant.completedCount.toLocaleString("id-ID")}</td>
+                    <td className="px-6 py-4 font-medium text-rose-600">{tenant.cancelledCount.toLocaleString("id-ID")}</td>
+                    <td className="px-6 py-4"><span className="inline-block rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">{successRate}%</span></td>
+                    <td className="px-6 py-4 text-right font-extrabold text-slate-900">{formatCurrency(tenant.revenue)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
 
             {/* Total / Summary Footer Row */}
@@ -464,32 +275,24 @@ export default function LaporanStatistikPage() {
                   TOTAL KANTIN
                 </td>
                 <td className="py-4 px-6 text-gray-500 font-normal">
-                  4 Tenant
+                  {report?.tenants.length ?? "—"} Tenant
                 </td>
                 <td className="py-4 px-6 font-black text-slate-900">
-                  {period === "harian" && "842"}
-                  {period === "mingguan" && "5.240"}
-                  {period === "bulanan" && "22.850"}
+                  {report?.summary.ordersCount.toLocaleString("id-ID") ?? "—"}
                 </td>
                 <td className="py-4 px-6 text-emerald-600 font-black">
-                  {period === "harian" && "598"}
-                  {period === "mingguan" && "5.092"}
-                  {period === "bulanan" && "22.180"}
+                  {report?.summary.completedCount.toLocaleString("id-ID") ?? "—"}
                 </td>
                 <td className="py-4 px-6 text-rose-600 font-black">
-                  {period === "harian" && "26"}
-                  {period === "mingguan" && "148"}
-                  {period === "bulanan" && "670"}
+                  {report?.summary.cancelledCount.toLocaleString("id-ID") ?? "—"}
                 </td>
                 <td className="py-4 px-6">
                   <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-800">
-                    97.2% Rata-rata
+                    {report ? `${report.summary.ordersCount ? Math.round(report.summary.completedCount / report.summary.ordersCount * 100) : 0}% rata-rata` : "—"}
                   </span>
                 </td>
                 <td className="py-4 px-6 text-right font-black text-amber-600 text-base">
-                  {period === "harian" && "Rp 10.600.000"}
-                  {period === "mingguan" && "Rp 68.450.000"}
-                  {period === "bulanan" && "Rp 295.300.000"}
+                  {report ? formatCurrency(report.summary.revenue) : "—"}
                 </td>
               </tr>
             </tfoot>

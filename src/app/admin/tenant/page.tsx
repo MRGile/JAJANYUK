@@ -1,14 +1,34 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+type Tenant = { id: number; name: string; description: string | null };
 
 export default function ManajemenTenantPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isBurgerActive, setIsBurgerActive] = useState(true);
-  const [isMieActive, setIsMieActive] = useState(true);
-  const [isSnackActive, setIsSnackActive] = useState(true);
-  const [isEsActive, setIsEsActive] = useState(true);
+  const [tenantRows, setTenantRows] = useState<Tenant[]>([]);
+  const [activeTenantIds, setActiveTenantIds] = useState<number[]>([]);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/tenants")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Gagal memuat tenant");
+        const result = await response.json();
+        return Array.isArray(result.data) ? result.data as Tenant[] : [];
+      })
+      .then((rows) => {
+        setTenantRows(rows);
+        setActiveTenantIds(rows.map((tenant) => tenant.id));
+      })
+      .catch(() => setTenantRows([]));
+  }, []);
+
+  const toggleTenant = (tenantId: number) => {
+    setActiveTenantIds((current) => current.includes(tenantId)
+      ? current.filter((id) => id !== tenantId)
+      : [...current, tenantId]);
+  };
 
   const handleSubmitTenant = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,323 +77,71 @@ export default function ManajemenTenantPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-xs">
           <span className="text-xs font-semibold text-gray-400 uppercase">Total Tenant</span>
-          <p className="text-2xl font-black text-slate-900 mt-1">4 Kios</p>
+          <p className="text-2xl font-black text-slate-900 mt-1">{tenantRows.length} Kios</p>
         </div>
         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-xs">
           <span className="text-xs font-semibold text-gray-400 uppercase">Tenant Buka</span>
           <p className="text-2xl font-black text-emerald-600 mt-1">
-            {(isBurgerActive ? 1 : 0) + (isMieActive ? 1 : 0) + (isSnackActive ? 1 : 0) + (isEsActive ? 1 : 0)} Kios
+            {activeTenantIds.length} Kios
           </p>
         </div>
         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-xs">
           <span className="text-xs font-semibold text-gray-400 uppercase">Total Menu Aktif</span>
-          <p className="text-2xl font-black text-slate-900 mt-1">70 Menu</p>
+          <p className="text-2xl font-black text-slate-900 mt-1">0 Menu</p>
         </div>
         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-xs">
           <span className="text-xs font-semibold text-gray-400 uppercase">Total Pesanan Hari Ini</span>
-          <p className="text-2xl font-black text-amber-600 mt-1">842 Pesanan</p>
+          <p className="text-2xl font-black text-amber-600 mt-1">0 Pesanan</p>
         </div>
       </div>
 
-      {/* 4 Tenant Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Tenant 1: Burger Bites */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
-          <div className="space-y-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3.5">
-                <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-3xl">X</div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-bold text-slate-900">Burger Bites</h2>
-                    <span className="text-xs bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-md">
-                      Makanan
-                    </span>
+      {/* Tenant Cards */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {tenantRows.length === 0 ? (
+          <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center text-sm text-gray-500 md:col-span-2">
+            Belum ada tenant di database.
+          </div>
+        ) : tenantRows.map((tenant) => {
+          const isActive = activeTenantIds.includes(tenant.id);
+          return (
+            <article key={tenant.id} className="flex flex-col justify-between rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+              <div className="space-y-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 text-3xl">🏪</div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-slate-900">{tenant.name}</h2>
+                        <span className="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">Tenant</span>
+                      </div>
+                      <p className="mt-0.5 text-xs text-gray-500">ID {tenant.id}</p>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-500 font-medium mt-0.5">
-                    Kios Blok A-01 • 08:00 - 16:30 WIB
-                  </p>
+                  <span className={`rounded-full border px-3 py-1 text-xs font-bold ${isActive ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
+                    {isActive ? "Aktif" : "Nonaktif"}
+                  </span>
                 </div>
-              </div>
-
-              {/* Status Badge */}
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors ${
-                  isBurgerActive
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-rose-50 text-rose-700 border-rose-200"
-                }`}
-              >
-                {isBurgerActive ? "Aktif" : "Nonaktif"}
-              </span>
-            </div>
-
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Spesialis burger daging sapi panggang, chicken burger, kentang goreng keju, dan paket hemat makan siang siswa.
-            </p>
-
-            {/* Owner & Tenant Stats Grid */}
-            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100 text-xs">
-              <div className="bg-gray-50 p-2.5 rounded-xl">
-                <span className="text-gray-400 text-[11px] block">Pemilik Stan</span>
-                <span className="font-semibold text-slate-800">Budi Santoso</span>
-                <span className="text-gray-500 text-[11px] block truncate">budi@burgerbites.com</span>
-                <span className="text-gray-500 text-[11px] block">0812-3456-7890</span>
-              </div>
-              <div className="bg-gray-50 p-2.5 rounded-xl flex flex-col justify-between">
-                <div>
-                  <span className="text-gray-400 text-[11px] block">Pesanan Hari Ini</span>
-                  <span className="text-lg font-black text-amber-600">312 Pesanan</span>
-                </div>
-                <div className="text-[11px] text-gray-500">
-                  Omset: <strong className="text-slate-800">Rp 4.250.000</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Footer */}
-          <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xs text-gray-400">
-              18 Menu Aktif • Rating 4.8 ⭐
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsBurgerActive(!isBurgerActive)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                isBurgerActive
-                  ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
-                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
-              }`}
-            >
-              {isBurgerActive ? "Nonaktifkan Tenant" : "Aktifkan Tenant"}
-            </button>
-          </div>
-        </div>
-
-        {/* Tenant 2: Mie Berkah */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
-          <div className="space-y-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3.5">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-3xl">X</div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-bold text-slate-900">Mie Berkah</h2>
-                    <span className="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-md">
-                      Makanan
-                    </span>
+                <p className="text-xs leading-relaxed text-gray-600">{tenant.description || "Belum ada deskripsi."}</p>
+                <div className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-3 text-xs">
+                  <div className="rounded-xl bg-gray-50 p-2.5">
+                    <span className="block text-[11px] text-gray-400">Total Menu Aktif</span>
+                    <span className="text-lg font-black text-slate-900">—</span>
                   </div>
-                  <p className="text-xs text-gray-500 font-medium mt-0.5">
-                    Kios Blok A-02 • 07:30 - 16:00 WIB
-                  </p>
-                </div>
-              </div>
-
-              {/* Status Badge */}
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors ${
-                  isMieActive
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-rose-50 text-rose-700 border-rose-200"
-                }`}
-              >
-                {isMieActive ? "Aktif" : "Nonaktif"}
-              </span>
-            </div>
-
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Aneka sajian mie ayam pangsit, bakso sapi urat, bihun bebek, dan kuah kaldu segar gurih tanpa bahan pengawet.
-            </p>
-
-            {/* Owner & Tenant Stats Grid */}
-            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100 text-xs">
-              <div className="bg-gray-50 p-2.5 rounded-xl">
-                <span className="text-gray-400 text-[11px] block">Pemilik Stan</span>
-                <span className="font-semibold text-slate-800">Ibu Wahyuni</span>
-                <span className="text-gray-500 text-[11px] block truncate">wahyuni@mieberkah.com</span>
-                <span className="text-gray-500 text-[11px] block">0813-7890-1234</span>
-              </div>
-              <div className="bg-gray-50 p-2.5 rounded-xl flex flex-col justify-between">
-                <div>
-                  <span className="text-gray-400 text-[11px] block">Pesanan Hari Ini</span>
-                  <span className="text-lg font-black text-emerald-600">244 Pesanan</span>
-                </div>
-                <div className="text-[11px] text-gray-500">
-                  Omset: <strong className="text-slate-800">Rp 3.120.000</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Footer */}
-          <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xs text-gray-400">
-              14 Menu Aktif • Rating 4.9 ⭐
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsMieActive(!isMieActive)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                isMieActive
-                  ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
-                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
-              }`}
-            >
-              {isMieActive ? "Nonaktifkan Tenant" : "Aktifkan Tenant"}
-            </button>
-          </div>
-        </div>
-
-        {/* Tenant 3: Snack Corner */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
-          <div className="space-y-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3.5">
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-3xl">X</div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-bold text-slate-900">Snack Corner</h2>
-                    <span className="text-xs bg-blue-100 text-blue-800 font-semibold px-2 py-0.5 rounded-md">
-                      Snack
-                    </span>
+                  <div className="flex flex-col justify-between rounded-xl bg-gray-50 p-2.5">
+                    <span className="block text-[11px] text-gray-400">Pesanan Hari Ini</span>
+                    <span className="text-lg font-black text-amber-600">—</span>
                   </div>
-                  <p className="text-xs text-gray-500 font-medium mt-0.5">
-                    Kios Blok B-01 • 08:30 - 15:30 WIB
-                  </p>
                 </div>
               </div>
-
-              {/* Status Badge */}
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors ${
-                  isSnackActive
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-rose-50 text-rose-700 border-rose-200"
-                }`}
-              >
-                {isSnackActive ? "Aktif" : "Nonaktif"}
-              </span>
-            </div>
-
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Camilan renyah, risol mayo lumer, pastel ayam, sosis solo, cireng pedas, dan aneka jajanan pasar ramah kantong.
-            </p>
-
-            {/* Owner & Tenant Stats Grid */}
-            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100 text-xs">
-              <div className="bg-gray-50 p-2.5 rounded-xl">
-                <span className="text-gray-400 text-[11px] block">Pemilik Stan</span>
-                <span className="font-semibold text-slate-800">Hendra Wijaya</span>
-                <span className="text-gray-500 text-[11px] block truncate">hendra@snackcorner.com</span>
-                <span className="text-gray-500 text-[11px] block">0856-1122-3344</span>
+              <div className="mt-5 flex items-center justify-end border-t border-gray-100 pt-4">
+                <button type="button" onClick={() => toggleTenant(tenant.id)} className={`cursor-pointer rounded-xl px-4 py-2 text-xs font-bold transition ${isActive ? "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100" : "border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"}`}>
+                  {isActive ? "Nonaktifkan Tenant" : "Aktifkan Tenant"}
+                </button>
               </div>
-              <div className="bg-gray-50 p-2.5 rounded-xl flex flex-col justify-between">
-                <div>
-                  <span className="text-gray-400 text-[11px] block">Pesanan Hari Ini</span>
-                  <span className="text-lg font-black text-blue-600">185 Pesanan</span>
-                </div>
-                <div className="text-[11px] text-gray-500">
-                  Omset: <strong className="text-slate-800">Rp 1.950.000</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Footer */}
-          <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xs text-gray-400">
-              22 Menu Aktif • Rating 4.7 ⭐
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsSnackActive(!isSnackActive)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                isSnackActive
-                  ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
-                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
-              }`}
-            >
-              {isSnackActive ? "Nonaktifkan Tenant" : "Aktifkan Tenant"}
-            </button>
-          </div>
-        </div>
-
-        {/* Tenant 4: Es & Segar */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-shadow relative overflow-hidden">
-          <div className="space-y-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3.5">
-                <div className="w-14 h-14 rounded-2xl bg-purple-50 border border-purple-200 flex items-center justify-center text-3xl">X</div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-xl font-bold text-slate-900">Es & Segar</h2>
-                    <span className="text-xs bg-purple-100 text-purple-800 font-semibold px-2 py-0.5 rounded-md">
-                      Minuman
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 font-medium mt-0.5">
-                    Kios Blok B-02 • 08:00 - 17:00 WIB
-                  </p>
-                </div>
-              </div>
-
-              {/* Status Badge */}
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-bold border transition-colors ${
-                  isEsActive
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-rose-50 text-rose-700 border-rose-200"
-                }`}
-              >
-                {isEsActive ? "Aktif" : "Nonaktif"}
-              </span>
-            </div>
-
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Minuman pelepas dahaga, es teh manis jumbo, aneka jus buah segar, es doger, kopi susu gula aren, dan es cincau kelapa.
-            </p>
-
-            {/* Owner & Tenant Stats Grid */}
-            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100 text-xs">
-              <div className="bg-gray-50 p-2.5 rounded-xl">
-                <span className="text-gray-400 text-[11px] block">Pemilik Stan</span>
-                <span className="font-semibold text-slate-800">Dewi Lestari</span>
-                <span className="text-gray-500 text-[11px] block truncate">dewi@essegar.com</span>
-                <span className="text-gray-500 text-[11px] block">0878-9988-7766</span>
-              </div>
-              <div className="bg-gray-50 p-2.5 rounded-xl flex flex-col justify-between">
-                <div>
-                  <span className="text-gray-400 text-[11px] block">Pesanan Hari Ini</span>
-                  <span className="text-lg font-black text-purple-600">101 Pesanan</span>
-                </div>
-                <div className="text-[11px] text-gray-500">
-                  Omset: <strong className="text-slate-800">Rp 1.280.000</strong>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Footer */}
-          <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-xs text-gray-400">
-              16 Menu Aktif • Rating 4.6 ⭐
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsEsActive(!isEsActive)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                isEsActive
-                  ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
-                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
-              }`}
-            >
-              {isEsActive ? "Nonaktifkan Tenant" : "Aktifkan Tenant"}
-            </button>
-          </div>
-        </div>
+            </article>
+          );
+        })}
       </div>
-
       {/* Modal Form Tambah Tenant */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
