@@ -1,12 +1,28 @@
+
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schema';
 
-// Singleton connection pool untuk Next.js (hindari multiple pools saat hot reload)
-const globalForDb = globalThis as unknown as { dbPool: Pool | undefined };
+// Singleton connection pool untuk Next.js
+const globalForDb = globalThis as unknown as {
+  dbPool: Pool | undefined;
+};
 
 function createPool() {
-  return new Pool({ connectionString: process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/jajan_yuk' });
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    throw new Error(
+      'DATABASE_URL belum dikonfigurasi. Periksa file .env.local.'
+    );
+  }
+
+  return new Pool({
+    connectionString,
+    max: 5,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+  });
 }
 
 if (!globalForDb.dbPool) {

@@ -14,12 +14,34 @@ import { relations, sql } from 'drizzle-orm';
 
 // ─── users ───────────────────────────────────────────────────────────────────
 
-const userRole = pgEnum('user_role', ['pelanggan', 'owner', 'kasir', 'admin']);
-const invitationStatus = pgEnum('invitation_status', ['pending', 'accepted', 'revoked']);
-const orderStatus = pgEnum('order_status', ['pending', 'confirmed', 'processing', 'ready', 'completed', 'cancelled']);
-const paymentMethod = pgEnum('payment_method', ['cash', 'qris']);
-const paymentStatus = pgEnum('payment_status', ['pending', 'paid', 'refunded', 'failed']);
-const stockMovementType = pgEnum('stock_movement_type', ['sale', 'restock', 'adjustment', 'refund']);
+export const userRole = pgEnum('user_role', ['pelanggan', 'owner', 'kasir', 'admin']);
+
+export const invitationStatus = pgEnum('invitation_status', ['pending', 'accepted', 'revoked']);
+
+export const orderStatus = pgEnum('order_status', [
+  'pending',
+  'confirmed',
+  'processing',
+  'ready',
+  'completed',
+  'cancelled',
+]);
+
+export const paymentMethod = pgEnum('payment_method', ['cash', 'qris']);
+
+export const paymentStatus = pgEnum('payment_status', [
+  'pending',
+  'paid',
+  'refunded',
+  'failed',
+]);
+
+export const stockMovementType = pgEnum('stock_movement_type', [
+  'sale',
+  'restock',
+  'adjustment',
+  'refund',
+]);
 
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
