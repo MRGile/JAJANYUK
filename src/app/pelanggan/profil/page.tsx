@@ -21,6 +21,7 @@ export default function ProfilPage() {
   });
 
   useEffect(() => {
+    const timeout = window.setTimeout(() => {
     const saved = localStorage.getItem("jajanyuk-profile");
 
     if (saved) {
@@ -36,6 +37,8 @@ export default function ProfilPage() {
         // Gunakan profil awal jika data tidak valid.
       }
     }
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, []);
 
   const initial = profile.nama.trim().charAt(0).toUpperCase() || "S";

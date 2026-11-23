@@ -90,7 +90,8 @@ export default function DetailPesananKasir({
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    try {
+    const timeout = window.setTimeout(() => {
+      try {
       const saved = localStorage.getItem(STORAGE_KEY);
       const allOrders: Order[] = saved ? JSON.parse(saved) : [];
 
@@ -104,11 +105,13 @@ export default function DetailPesananKasir({
         setOrder(found);
         setCatatan(found.catatanKasir || "");
       }
-    } catch {
-      setOrder(null);
-    } finally {
-      setLoading(false);
-    }
+      } catch {
+        setOrder(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, [id]);
 
   const saveOrder = (updatedOrder: Order) => {

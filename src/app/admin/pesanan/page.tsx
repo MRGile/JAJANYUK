@@ -85,385 +85,7 @@ export default function ManajemenPesananPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
-              {/* Order 1: ORD-0842 (Burger Bites / Diproses) */}
-              {(statusFilter === "semua" || statusFilter === "diproses") &&
-                (tenantFilter === "semua" || tenantFilter === "burger") && (
-                  <tr className="hover:bg-amber-50/40 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      #ORD-0842
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-semibold text-slate-800 flex items-center gap-1">
-                         Burger Bites
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-semibold text-slate-900">Ahmad Fauzi</div>
-                      <div className="text-xs text-gray-400">0812-9988-1234</div>
-                    </td>
-                    <td className="py-4 px-6 max-w-xs text-slate-600 truncate">
-                      2x Double Beef Burger + 1x Fries
-                    </td>
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      Rp 65.000
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                        
-                        Diproses
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-xs text-gray-500">
-                      13:42 WIB
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setActiveModalOrderId("ORD-0842")}
-                        className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-amber-500 hover:text-slate-950 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                )}
-
-              {/* Order 2: ORD-0841 (Mie Berkah / Menunggu) */}
-              {(statusFilter === "semua" || statusFilter === "menunggu") &&
-                (tenantFilter === "semua" || tenantFilter === "mie") && (
-                  <tr className="hover:bg-amber-50/40 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      #ORD-0841
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-semibold text-slate-800 flex items-center gap-1">
-                         Mie Berkah
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-semibold text-slate-900">Siti Rahma</div>
-                      <div className="text-xs text-gray-400">0857-4433-2211</div>
-                    </td>
-                    <td className="py-4 px-6 max-w-xs text-slate-600 truncate">
-                      1x Mie Ayam Komplit + 1x Pangsit Goreng
-                    </td>
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      Rp 28.000
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                        Menunggu
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-xs text-gray-500">
-                      13:39 WIB
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setActiveModalOrderId("ORD-0841")}
-                        className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-amber-500 hover:text-slate-950 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                )}
-
-              {/* Order 3: ORD-0840 (Es & Segar / Selesai) */}
-              {(statusFilter === "semua" || statusFilter === "selesai") &&
-                (tenantFilter === "semua" || tenantFilter === "es") && (
-                  <tr className="hover:bg-amber-50/40 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      #ORD-0840
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-semibold text-slate-800 flex items-center gap-1">
-                         Es & Segar
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-semibold text-slate-900">Dimas Pratama</div>
-                      <div className="text-xs text-gray-400">0899-7788-9900</div>
-                    </td>
-                    <td className="py-4 px-6 max-w-xs text-slate-600 truncate">
-                      2x Es Teh Jumbo + 1x Jus Alpukat
-                    </td>
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      Rp 24.000
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        Selesai
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-xs text-gray-500">
-                      13:35 WIB
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setActiveModalOrderId("ORD-0840")}
-                        className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-amber-500 hover:text-slate-950 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                )}
-
-              {/* Order 4: ORD-0839 (Snack Corner / Selesai) */}
-              {(statusFilter === "semua" || statusFilter === "selesai") &&
-                (tenantFilter === "semua" || tenantFilter === "snack") && (
-                  <tr className="hover:bg-amber-50/40 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      #ORD-0839
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-semibold text-slate-800 flex items-center gap-1">
-                         Snack Corner
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-semibold text-slate-900">Nabila Putri</div>
-                      <div className="text-xs text-gray-400">0819-2233-4455</div>
-                    </td>
-                    <td className="py-4 px-6 max-w-xs text-slate-600 truncate">
-                      3x Risol Mayo + 2x Pastel Ayam
-                    </td>
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      Rp 25.000
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        Selesai
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-xs text-gray-500">
-                      13:30 WIB
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setActiveModalOrderId("ORD-0839")}
-                        className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-amber-500 hover:text-slate-950 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                )}
-
-              {/* Order 5: ORD-0838 (Burger Bites / Dibatalkan) */}
-              {(statusFilter === "semua" || statusFilter === "dibatalkan") &&
-                (tenantFilter === "semua" || tenantFilter === "burger") && (
-                  <tr className="hover:bg-amber-50/40 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      #ORD-0838
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-semibold text-slate-800 flex items-center gap-1">
-                         Burger Bites
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-semibold text-slate-900">Rizky Kurniawan</div>
-                      <div className="text-xs text-gray-400">0812-7711-2233</div>
-                    </td>
-                    <td className="py-4 px-6 max-w-xs text-slate-600 truncate">
-                      1x Crispy Chicken Burger Combo
-                    </td>
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      Rp 32.000
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                        Dibatalkan
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-xs text-gray-500">
-                      13:22 WIB
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setActiveModalOrderId("ORD-0838")}
-                        className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-amber-500 hover:text-slate-950 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                )}
-
-              {/* Order 6: ORD-0837 (Mie Berkah / Selesai) */}
-              {(statusFilter === "semua" || statusFilter === "selesai") &&
-                (tenantFilter === "semua" || tenantFilter === "mie") && (
-                  <tr className="hover:bg-amber-50/40 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      #ORD-0837
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-semibold text-slate-800 flex items-center gap-1">
-                         Mie Berkah
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-semibold text-slate-900">Maya Lestari</div>
-                      <div className="text-xs text-gray-400">0856-3344-5566</div>
-                    </td>
-                    <td className="py-4 px-6 max-w-xs text-slate-600 truncate">
-                      2x Bakso Urat Kuah Pedas + Es Teh
-                    </td>
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      Rp 42.000
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        Selesai
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-xs text-gray-500">
-                      13:15 WIB
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setActiveModalOrderId("ORD-0837")}
-                        className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-amber-500 hover:text-slate-950 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                )}
-
-              {/* Order 7: ORD-0836 (Snack Corner / Diproses) */}
-              {(statusFilter === "semua" || statusFilter === "diproses") &&
-                (tenantFilter === "semua" || tenantFilter === "snack") && (
-                  <tr className="hover:bg-amber-50/40 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      #ORD-0836
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-semibold text-slate-800 flex items-center gap-1">
-                         Snack Corner
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-semibold text-slate-900">Bagus Tri</div>
-                      <div className="text-xs text-gray-400">0813-1122-8899</div>
-                    </td>
-                    <td className="py-4 px-6 max-w-xs text-slate-600 truncate">
-                      4x Tahu Walik + 1x Tempe Mendoan
-                    </td>
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      Rp 20.000
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                        
-                        Diproses
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-xs text-gray-500">
-                      13:10 WIB
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setActiveModalOrderId("ORD-0836")}
-                        className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-amber-500 hover:text-slate-950 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                )}
-
-              {/* Order 8: ORD-0835 (Es & Segar / Menunggu) */}
-              {(statusFilter === "semua" || statusFilter === "menunggu") &&
-                (tenantFilter === "semua" || tenantFilter === "es") && (
-                  <tr className="hover:bg-amber-50/40 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      #ORD-0835
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-semibold text-slate-800 flex items-center gap-1">
-                         Es & Segar
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-semibold text-slate-900">Citra Kirana</div>
-                      <div className="text-xs text-gray-400">0821-4455-7788</div>
-                    </td>
-                    <td className="py-4 px-6 max-w-xs text-slate-600 truncate">
-                      2x Es Cincau Susu Gula Aren
-                    </td>
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      Rp 20.000
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                        Menunggu
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-xs text-gray-500">
-                      13:05 WIB
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setActiveModalOrderId("ORD-0835")}
-                        className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-amber-500 hover:text-slate-950 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                )}
-
-              {/* Order 9: ORD-0834 (Burger Bites / Selesai) */}
-              {(statusFilter === "semua" || statusFilter === "selesai") &&
-                (tenantFilter === "semua" || tenantFilter === "burger") && (
-                  <tr className="hover:bg-amber-50/40 transition-colors">
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      #ORD-0834
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-semibold text-slate-800 flex items-center gap-1">
-                         Burger Bites
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="font-semibold text-slate-900">David Pratama</div>
-                      <div className="text-xs text-gray-400">0877-6655-4433</div>
-                    </td>
-                    <td className="py-4 px-6 max-w-xs text-slate-600 truncate">
-                      1x Triple Bacon Burger + Cola
-                    </td>
-                    <td className="py-4 px-6 font-bold text-slate-900">
-                      Rp 48.000
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        Selesai
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-xs text-gray-500">
-                      12:55 WIB
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setActiveModalOrderId("ORD-0834")}
-                        className="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-amber-500 hover:text-slate-950 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-                      >
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                )}
+              <tr><td colSpan={8} className="px-6 py-10 text-center text-sm text-gray-500">Belum ada data.</td></tr>
             </tbody>
           </table>
         </div>
@@ -499,7 +121,7 @@ export default function ManajemenPesananPage() {
                 <div>
                   <span className="text-xs text-gray-400 block">Stan Tenant</span>
                   <span className="text-sm font-bold text-slate-900">
-                     Burger Bites (Blok A-01)
+                     Tenant (Blok A-01)
                   </span>
                 </div>
                 <div className="text-right">
@@ -518,7 +140,7 @@ export default function ManajemenPesananPage() {
                 <div className="grid grid-cols-2 gap-2 text-slate-800 pt-1">
                   <div>
                     <span className="text-gray-400 block">Nama:</span>
-                    <strong className="font-semibold">Ahmad Fauzi</strong>
+                    <strong className="font-semibold">—</strong>
                   </div>
                   <div>
                     <span className="text-gray-400 block">WhatsApp:</span>
@@ -545,11 +167,11 @@ export default function ManajemenPesananPage() {
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between items-center text-slate-800">
                     <span>2x Double Beef Cheese Burger</span>
-                    <span className="font-semibold">Rp 50.000</span>
+                    <span className="font-semibold">Rp 0</span>
                   </div>
                   <div className="flex justify-between items-center text-slate-800">
                     <span>1x Curly Fries Extra Cheese</span>
-                    <span className="font-semibold">Rp 15.000</span>
+                    <span className="font-semibold">Rp 0</span>
                   </div>
                   <div className="pt-2 border-t border-dashed border-gray-200 flex justify-between items-center text-slate-500 text-[11px]">
                     <span>Biaya Layanan Admin</span>
@@ -557,7 +179,7 @@ export default function ManajemenPesananPage() {
                   </div>
                   <div className="pt-2 border-t border-gray-200 flex justify-between items-center text-sm font-black text-slate-900">
                     <span>Total Pembayaran</span>
-                    <span className="text-amber-600 text-base">Rp 65.000</span>
+                    <span className="text-amber-600 text-base">Rp 0</span>
                   </div>
                 </div>
               </div>

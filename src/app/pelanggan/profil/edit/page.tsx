@@ -15,6 +15,7 @@ export default function EditProfilPage() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    const timeout = window.setTimeout(() => {
     const saved = localStorage.getItem("jajanyuk-profile");
 
     if (saved) {
@@ -30,6 +31,8 @@ export default function EditProfilPage() {
     }
 
     setLoaded(true);
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, []);
 
   const saveProfile = () => {

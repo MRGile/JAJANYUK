@@ -1,12 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import RubberSegment from "@/components/ui/RubberSegment";
-import {animate,motion,useMotionValue,useReducedMotion,useTransform,} from "motion/react";
 
 export default function AdminDashboardPage() {
   const [chartPeriod, setChartPeriod] = useState<"7d" | "30d" | "90d">("7d");
+  const [tenantRows, setTenantRows] = useState<Array<{ id: number; name: string; description: string | null }>>([]);
+  const [report, setReport] = useState<{ summary: { ordersCount: number; completedCount: number; cancelledCount: number }; daily: Array<{ date: string; ordersCount: number }>; tenants: Array<{ id: number; name: string; ordersCount: number }> } | null>(null);
+  const [anchorDate, setAnchorDate] = useState("2000-01-01");
+  const [recentOrders, setRecentOrders] = useState<Array<{ id: number; orderNumber: string; customerName: string | null; tenantName: string | null; total: string | number; status: string | null; createdAt: string | Date | null; items: Array<{ name: string }> }>>([]);
+
+  useEffect(() => {
+    fetch("/api/tenants")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Gagal memuat tenant");
+        const result = await response.json();
+        return Array.isArray(result.data) ? result.data : [];
+      })
+      .then((rows) => setTenantRows(rows))
+      .catch(() => setTenantRows([]));
+  }, []);
+
+  useEffect(() => {
+    const end = new Date();
+    const currentDate = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, "0")}-${String(end.getDate()).padStart(2, "0")}`;
+    const start = new Date(end);
+    start.setDate(end.getDate() - (chartPeriod === "7d" ? 6 : chartPeriod === "30d" ? 29 : 89));
+    const dateParam = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    fetch(`/api/reports?from=${dateParam(start)}&to=${dateParam(end)}`)
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Gagal memuat laporan");
+        setAnchorDate(currentDate);
+        setReport(result.data);
+      })
+      .catch(() => setReport(null));
+    fetch("/api/orders")
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Gagal memuat pesanan");
+        setRecentOrders(Array.isArray(result.data) ? result.data.slice(0, 5) : []);
+      })
+      .catch(() => setRecentOrders([]));
+  }, [chartPeriod]);
 
   return (
     <div className="space-y-8">
@@ -48,11 +85,11 @@ export default function AdminDashboardPage() {
           </div>
           <div className="mt-4">
             <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              842
+              {report?.summary.ordersCount.toLocaleString("id-ID") ?? "—"}
             </div>
             <div className="mt-2 flex items-center gap-1.5 text-xs">
               <span className="text-emerald-600 font-bold flex items-center">
-                 +12.5%
+              {report ? `${report.summary.ordersCount ? Math.round(report.summary.completedCount / report.summary.ordersCount * 100) : 0}%` : "—"}
               </span>
               <span className="text-gray-400">dari kemarin</span>
             </div>
@@ -70,11 +107,11 @@ export default function AdminDashboardPage() {
           </div>
           <div className="mt-4">
             <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              218
+              {report ? Math.max(0, report.summary.ordersCount - report.summary.completedCount - report.summary.cancelledCount).toLocaleString("id-ID") : "—"}
             </div>
             <div className="mt-2 flex items-center gap-1.5 text-xs">
               <span className="text-blue-600 font-bold">
-                25.8%
+              {report ? `${report.summary.ordersCount ? Math.round(Math.max(0, report.summary.ordersCount - report.summary.completedCount - report.summary.cancelledCount) / report.summary.ordersCount * 100) : 0}%` : "—"}
               </span>
               <span className="text-gray-400">sedang disiapkan dapur</span>
             </div>
@@ -91,11 +128,11 @@ export default function AdminDashboardPage() {
           </div>
           <div className="mt-4">
             <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              598
+              {report?.summary.completedCount.toLocaleString("id-ID") ?? "—"}
             </div>
             <div className="mt-2 flex items-center gap-1.5 text-xs">
               <span className="text-emerald-600 font-bold">
-                71.0%
+                {report ? `${report.summary.ordersCount ? Math.round(report.summary.completedCount / report.summary.ordersCount * 100) : 0}%` : "—"}
               </span>
               <span className="text-gray-400">berhasil diambil pelanggan</span>
             </div>
@@ -112,11 +149,11 @@ export default function AdminDashboardPage() {
           </div>
           <div className="mt-4">
             <div className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              26
+              {report?.summary.cancelledCount.toLocaleString("id-ID") ?? "—"}
             </div>
             <div className="mt-2 flex items-center gap-1.5 text-xs">
               <span className="text-rose-600 font-bold">
-                3.1%
+                {report ? `${report.summary.ordersCount ? Math.round(report.summary.cancelledCount / report.summary.ordersCount * 100) : 0}%` : "—"}
               </span>
               <span className="text-gray-400">tingkat pembatalan rendah</span>
             </div>
@@ -162,29 +199,21 @@ export default function AdminDashboardPage() {
           {/* Line chart */}
           <div className="mt-6 h-64 w-full">
             {(() => {
-              const series = chartPeriod === "7d"
-                ? [
-                    { label: "Sen", value: 110 },
-                    { label: "Sel", value: 135 },
-                    { label: "Rab", value: 92 },
-                    { label: "Kam", value: 128 },
-                    { label: "Jum", value: 152 },
-                    { label: "Sab", value: 165 },
-                    { label: "Min", value: 60 },
-                  ]
-                : chartPeriod === "30d"
-                  ? [
-                      { label: "Minggu 1", value: 760 },
-                      { label: "Minggu 2", value: 890 },
-                      { label: "Minggu 3", value: 810 },
-                      { label: "Minggu 4", value: 1020 },
-                    ]
-                  : [
-                      { label: "September", value: 3420 },
-                      { label: "Oktober", value: 3980 },
-                      { label: "November", value: 4450 },
-                    ];
-              const maxValue = Math.max(...series.map((point) => point.value)) * 1.15;
+              const dailyCounts = new Map<string, number>((report?.daily ?? []).map((day) => [String(day.date).slice(0, 10), day.ordersCount]));
+              const groups = chartPeriod === "7d" ? 7 : chartPeriod === "30d" ? 4 : 3;
+              const dayCount = chartPeriod === "7d" ? 7 : chartPeriod === "30d" ? 30 : 90;
+              const days: Array<{ date: Date; value: number }> = Array.from({ length: dayCount }, (_, index) => {
+                const date = new Date(`${anchorDate}T00:00:00`);
+                date.setDate(date.getDate() - (dayCount - index - 1));
+                const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+                return { date, value: dailyCounts.get(key) ?? 0 };
+              });
+              const series = Array.from({ length: groups }, (_, index) => {
+                const bucket = days.filter((_, dayIndex) => Math.floor(dayIndex * groups / days.length) === index);
+                const label = chartPeriod === "7d" ? ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"][bucket[0].date.getDay()] : chartPeriod === "30d" ? `Minggu ${index + 1}` : new Intl.DateTimeFormat("id-ID", { month: "short" }).format(bucket[0].date);
+                return { label, value: bucket.reduce((sum, day) => sum + day.value, 0) };
+              });
+              const maxValue = Math.max(1, ...series.map((point) => point.value)) * 1.15;
               const points = series.map((point, index) => ({
                 ...point,
                 x: 36 + (index * 628) / (series.length - 1),
@@ -228,8 +257,8 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-            <span>Rata-rata pesanan harian: <strong className="text-slate-800">120 pesanan</strong></span>
-            <span className="text-emerald-600 font-semibold">Trafik jam makan siang (11:30 - 13:30) tertinggi</span>
+            <span>Rata-rata pesanan harian: <strong className="text-slate-800">{report ? `${Math.round(report.summary.ordersCount / (chartPeriod === "7d" ? 7 : chartPeriod === "30d" ? 30 : 90)).toLocaleString("id-ID")} pesanan` : "—"}</strong></span>
+            <span className="text-gray-400">Ringkasan berdasarkan transaksi database</span>
           </div>
         </div>
 
@@ -242,90 +271,24 @@ export default function AdminDashboardPage() {
                 <p className="text-xs text-gray-400">Pangsa volume penjualan hari ini</p>
               </div>
               <span className="text-xs bg-amber-50 text-amber-700 font-semibold px-2.5 py-1 rounded-full border border-amber-200">
-                4 Tenant
+                {tenantRows.length} Tenant
               </span>
             </div>
 
             <div className="mt-5 space-y-5">
-              {/* Tenant 1: Burger Bites 37% */}
-              <div>
-                <div className="flex items-center justify-between text-sm mb-1.5">
-                  <div className="flex items-center gap-2">
-                    
-                    <span className="font-semibold text-slate-800">Burger Bites</span>
+              {tenantRows.length === 0 ? (
+                <p className="py-8 text-center text-sm text-gray-500">Belum ada data tenant.</p>
+              ) : tenantRows.map((tenant) => (
+                <div key={tenant.id}>
+                  <div className="mb-1.5 flex items-center justify-between text-sm">
+                    <span className="font-semibold text-slate-800">{tenant.name}</span>
+                    <span className="text-xs text-gray-400">{report?.tenants.find((row) => row.id === tenant.id)?.ordersCount ?? 0} pesanan</span>
                   </div>
-                  <div className="text-right">
-                    <span className="font-bold text-amber-600">37%</span>
-                    <span className="text-xs text-gray-400 ml-1.5">(312 pesanan)</span>
-                  </div>
-                </div>
-                <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    style={{ width: "37%" }}
-                    className="h-full bg-amber-500 rounded-full"
-                  ></div>
-                </div>
-              </div>
-
-              {/* Tenant 2: Mie Berkah 29% */}
-              <div>
-                <div className="flex items-center justify-between text-sm mb-1.5">
-                  <div className="flex items-center gap-2">
-                    
-                    <span className="font-semibold text-slate-800">Mie Berkah</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-bold text-emerald-600">29%</span>
-                    <span className="text-xs text-gray-400 ml-1.5">(244 pesanan)</span>
+                  <div className="h-3 w-full overflow-hidden rounded-full bg-gray-100">
+                    <div style={{ width: `${Math.min(100, (report?.summary.ordersCount ? (report.tenants.find((row) => row.id === tenant.id)?.ordersCount ?? 0) / report.summary.ordersCount * 100 : 0))}%` }} className="h-full rounded-full bg-amber-500" />
                   </div>
                 </div>
-                <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    style={{ width: "29%" }}
-                    className="h-full bg-emerald-500 rounded-full"
-                  ></div>
-                </div>
-              </div>
-
-              {/* Tenant 3: Snack Corner 22% */}
-              <div>
-                <div className="flex items-center justify-between text-sm mb-1.5">
-                  <div className="flex items-center gap-2">
-                    
-                    <span className="font-semibold text-slate-800">Snack Corner</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-bold text-blue-600">22%</span>
-                    <span className="text-xs text-gray-400 ml-1.5">(185 pesanan)</span>
-                  </div>
-                </div>
-                <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    style={{ width: "22%" }}
-                    className="h-full bg-blue-500 rounded-full"
-                  ></div>
-                </div>
-              </div>
-
-              {/* Tenant 4: Es & Segar 12% */}
-              <div>
-                <div className="flex items-center justify-between text-sm mb-1.5">
-                  <div className="flex items-center gap-2">
-                    
-                    <span className="font-semibold text-slate-800">Es & Segar</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-bold text-purple-600">12%</span>
-                    <span className="text-xs text-gray-400 ml-1.5">(101 pesanan)</span>
-                  </div>
-                </div>
-                <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    style={{ width: "12%" }}
-                    className="h-full bg-purple-500 rounded-full"
-                  ></div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -340,104 +303,34 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Tenant Aktif Section (4 Cards) */}
+      {/* Tenant Aktif Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Tenant Aktif</h2>
-            <p className="text-xs text-gray-500">Status kios dan pemilik stan kantin</p>
+            <p className="text-xs text-gray-500">Status tenant dari database</p>
           </div>
-          <Link
-            href="/admin/tenant"
-            className="text-xs font-semibold text-amber-600 hover:text-amber-700 hover:underline"
-          >
+          <Link href="/admin/tenant" className="text-xs font-semibold text-amber-600 hover:text-amber-700 hover:underline">
             Lihat Semua Tenant &rarr;
           </Link>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {/* Tenant Card 1: Burger Bites */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-2xl border border-amber-200">
-                
-              </div>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Aktif
-              </span>
-            </div>
-            <div className="mt-3">
-              <h3 className="font-bold text-slate-900 text-base">Burger Bites</h3>
-              <p className="text-xs text-gray-400">Owner: Budi Santoso</p>
-            </div>
-            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
-              <span className="text-gray-500">Pesanan Hari Ini</span>
-              <span className="font-bold text-slate-900">312 pesanan</span>
-            </div>
+        {tenantRows.length === 0 ? (
+          <div className="rounded-2xl border border-gray-100 bg-white p-8 text-center text-sm text-gray-500">Belum ada tenant di database.</div>
+        ) : (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {tenantRows.map((tenant) => (
+              <article key={tenant.id} className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+                <div className="flex items-start justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-2xl">🏪</div>
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">Aktif</span>
+                </div>
+                <h3 className="mt-3 text-base font-bold text-slate-900">{tenant.name}</h3>
+                <p className="mt-1 line-clamp-2 text-xs text-gray-500">{tenant.description || ""}</p>
+              </article>
+            ))}
           </div>
-
-          {/* Tenant Card 2: Mie Berkah */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-2xl border border-emerald-200">
-                
-              </div>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Aktif
-              </span>
-            </div>
-            <div className="mt-3">
-              <h3 className="font-bold text-slate-900 text-base">Mie Berkah</h3>
-              <p className="text-xs text-gray-400">Owner: Ibu Wahyuni</p>
-            </div>
-            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
-              <span className="text-gray-500">Pesanan Hari Ini</span>
-              <span className="font-bold text-slate-900">244 pesanan</span>
-            </div>
-          </div>
-
-          {/* Tenant Card 3: Snack Corner */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-2xl border border-blue-200">
-                
-              </div>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Aktif
-              </span>
-            </div>
-            <div className="mt-3">
-              <h3 className="font-bold text-slate-900 text-base">Snack Corner</h3>
-              <p className="text-xs text-gray-400">Owner: Hendra Wijaya</p>
-            </div>
-            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
-              <span className="text-gray-500">Pesanan Hari Ini</span>
-              <span className="font-bold text-slate-900">185 pesanan</span>
-            </div>
-          </div>
-
-          {/* Tenant Card 4: Es & Segar */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-2xl border border-purple-200">
-                
-              </div>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Aktif
-              </span>
-            </div>
-            <div className="mt-3">
-              <h3 className="font-bold text-slate-900 text-base">Es & Segar</h3>
-              <p className="text-xs text-gray-400">Owner: Dewi Lestari</p>
-            </div>
-            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
-              <span className="text-gray-500">Pesanan Hari Ini</span>
-              <span className="font-bold text-slate-900">101 pesanan</span>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
-
       {/* Pesanan Terbaru Section (5 Rows) */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -467,156 +360,9 @@ export default function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
-              {/* Row 1 */}
-              <tr className="hover:bg-amber-50/40 transition-colors">
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  #ORD-0842
-                </td>
-                <td className="py-4 px-6">
-                  <div className="font-semibold text-slate-900">Ahmad Fauzi</div>
-                  <div className="text-xs text-gray-400">Siswa (XII RPL 1)</div>
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-flex items-center gap-1.5 font-medium text-slate-800">
-                     Burger Bites
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-slate-600 max-w-xs truncate">
-                  Double Beef Cheese Burger + Fries
-                </td>
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  Rp 45.000
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                    
-                    Diproses
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right text-xs font-medium text-gray-500">
-                  13:42 WIB
-                </td>
-              </tr>
-
-              {/* Row 2 */}
-              <tr className="hover:bg-amber-50/40 transition-colors">
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  #ORD-0841
-                </td>
-                <td className="py-4 px-6">
-                  <div className="font-semibold text-slate-900">Siti Rahma</div>
-                  <div className="text-xs text-gray-400">Siswa (XI MM 2)</div>
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-flex items-center gap-1.5 font-medium text-slate-800">
-                     Mie Berkah
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-slate-600 max-w-xs truncate">
-                  Mie Ayam Pangsit Komplit
-                </td>
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  Rp 22.000
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                    Menunggu
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right text-xs font-medium text-gray-500">
-                  13:39 WIB
-                </td>
-              </tr>
-
-              {/* Row 3 */}
-              <tr className="hover:bg-amber-50/40 transition-colors">
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  #ORD-0840
-                </td>
-                <td className="py-4 px-6">
-                  <div className="font-semibold text-slate-900">Dimas Pratama</div>
-                  <div className="text-xs text-gray-400">Siswa (X TKJ 1)</div>
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-flex items-center gap-1.5 font-medium text-slate-800">
-                     Es & Segar
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-slate-600 max-w-xs truncate">
-                  Es Teh Manis Jumbo + Es Doger
-                </td>
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  Rp 18.000
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    Selesai
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right text-xs font-medium text-gray-500">
-                  13:35 WIB
-                </td>
-              </tr>
-
-              {/* Row 4 */}
-              <tr className="hover:bg-amber-50/40 transition-colors">
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  #ORD-0839
-                </td>
-                <td className="py-4 px-6">
-                  <div className="font-semibold text-slate-900">Nabila Putri</div>
-                  <div className="text-xs text-gray-400">Guru / Staf</div>
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-flex items-center gap-1.5 font-medium text-slate-800">
-                     Snack Corner
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-slate-600 max-w-xs truncate">
-                  Risol Mayo 3x + Cireng Crispy
-                </td>
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  Rp 25.000
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    Selesai
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right text-xs font-medium text-gray-500">
-                  13:30 WIB
-                </td>
-              </tr>
-
-              {/* Row 5 */}
-              <tr className="hover:bg-amber-50/40 transition-colors">
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  #ORD-0838
-                </td>
-                <td className="py-4 px-6">
-                  <div className="font-semibold text-slate-900">Rizky Kurniawan</div>
-                  <div className="text-xs text-gray-400">Siswa (XII AKL 2)</div>
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-flex items-center gap-1.5 font-medium text-slate-800">
-                     Burger Bites
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-slate-600 max-w-xs truncate">
-                  Crispy Chicken Burger Combo
-                </td>
-                <td className="py-4 px-6 font-bold text-slate-900">
-                  Rp 28.000
-                </td>
-                <td className="py-4 px-6">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                    Dibatalkan
-                  </span>
-                </td>
-                <td className="py-4 px-6 text-right text-xs font-medium text-gray-500">
-                  13:22 WIB
-                </td>
-              </tr>
+              {recentOrders.length ? recentOrders.map((order) => <tr key={order.id}>
+                <td className="px-6 py-4 font-semibold">{order.orderNumber}</td><td className="px-6 py-4">{order.customerName || "—"}</td><td className="px-6 py-4">{order.tenantName || "—"}</td><td className="px-6 py-4">{order.items[0]?.name || "—"}</td><td className="px-6 py-4">Rp {Number(order.total).toLocaleString("id-ID")}</td><td className="px-6 py-4">{order.status || "—"}</td><td className="px-6 py-4 text-right">{order.createdAt ? new Date(order.createdAt).toLocaleString("id-ID") : "—"}</td>
+              </tr>) : <tr><td colSpan={7} className="px-6 py-10 text-center text-sm text-gray-500">Belum ada data pesanan di database.</td></tr>}
             </tbody>
           </table>
         </div>

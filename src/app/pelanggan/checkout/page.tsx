@@ -14,12 +14,9 @@ type CartItem = {
   quantity: number;
 };
 
-const tenants = [
-  { id: "1", name: "Tenant 1" },
-  { id: "2", name: "Tenant 2" },
-  { id: "3", name: "Tenant 3" },
-  { id: "4", name: "Tenant 4" },
-];
+function createOrderId() {
+  return `JY-${Date.now()}`;
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -34,8 +31,10 @@ export default function CheckoutPage() {
   const [metode, setMetode] = useState("kelas");
   const [catatan, setCatatan] = useState("");
   const [message, setMessage] = useState("");
+  const [tenantName, setTenantName] = useState("");
 
   useEffect(() => {
+    const timeout = window.setTimeout(() => {
     const savedCart = localStorage.getItem("jajanyuk-cart");
 
     if (savedCart) {
@@ -60,7 +59,23 @@ export default function CheckoutPage() {
     }
 
     setLoaded(true);
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, []);
+
+  useEffect(() => {
+    const tenantId = cart[0]?.tenantId;
+    if (!tenantId) return;
+
+    fetch(`/api/tenants/${tenantId}`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Tenant tidak tersedia");
+        const result = await response.json();
+        return result.data?.name as string | undefined;
+      })
+      .then((name) => setTenantName(name ?? ""))
+      .catch(() => setTenantName(""));
+  }, [cart]);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("id-ID", {
@@ -77,10 +92,6 @@ export default function CheckoutPage() {
   const totalItems = cart.reduce(
     (sum, item) => sum + item.quantity,
     0
-  );
-
-  const tenant = tenants.find(
-    (item) => item.id === cart[0]?.tenantId
   );
 
   const submitOrder = () => {
@@ -134,7 +145,7 @@ export default function CheckoutPage() {
       const tenantId = cart[0].tenantId;
 
       const order = {
-        id: `JY-${Date.now()}`,
+        id: createOrderId(),
         nama: nama.trim(),
         kelas: kelas.trim(),
         metode,
@@ -434,7 +445,7 @@ export default function CheckoutPage() {
                 Pesanan dari
               </p>
               <p className="mt-1 font-bold">
-                {tenant?.name ?? "Tenant"}
+                {tenantName || "Tenant"}
               </p>
             </div>
 

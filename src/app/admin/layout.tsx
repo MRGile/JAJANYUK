@@ -11,7 +11,7 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -57,7 +57,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {/* Date & Time */}
           <div className="hidden sm:flex items-center gap-3 text-xs text-gray-500">
             <span>
-              {currentTime.toLocaleDateString("id-ID", {
+              {currentTime?.toLocaleDateString("id-ID", {
                 weekday: "long",
                 day: "2-digit",
                 month: "long",
@@ -68,7 +68,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <span className="text-gray-300">|</span>
 
             <span className="font-medium text-slate-700 tabular-nums">
-              {currentTime.toLocaleTimeString("id-ID", {
+              {currentTime?.toLocaleTimeString("id-ID", {
                 hour: "2-digit",
                 minute: "2-digit",
                 second: "2-digit",
@@ -86,7 +86,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <footer className="border-t border-gray-200 bg-white px-5 md:px-8 py-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-400">
             <p>
-              © {new Date().getFullYear()} Kantin JajanYuk.
+              © {currentTime?.getFullYear() ?? ""} Kantin JajanYuk.
               All rights reserved.
             </p>
 

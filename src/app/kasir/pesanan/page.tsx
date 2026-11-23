@@ -96,7 +96,8 @@ export default function PesananKasirPage() {
   const [notes, setNotes] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    try {
+    const timeout = window.setTimeout(() => {
+      try {
       const saved = localStorage.getItem(STORAGE_KEY);
       const parsed: Order[] = saved ? JSON.parse(saved) : [];
 
@@ -111,11 +112,13 @@ export default function PesananKasirPage() {
       );
 
       setOrders(tenantOrders);
-    } catch {
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
+      } catch {
+        setOrders([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, []);
 
   const saveOrders = (updatedOrders: Order[]) => {

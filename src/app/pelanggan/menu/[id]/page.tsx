@@ -4,85 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-const menus = [
-  {
-    id: "1",
-    tenantId: "1",
-    name: "Nasi Ayam",
-    price: 12000,
-    description: "Nasi putih dengan ayam goreng dan sambal.",
-    category: "Makanan",
-    available: true,
-    emoji: "🍗",
-  },
-  {
-    id: "2",
-    tenantId: "1",
-    name: "Nasi Goreng",
-    price: 13000,
-    description: "Nasi goreng dengan bumbu khas dan telur.",
-    category: "Makanan",
-    available: true,
-    emoji: "🍛",
-  },
-  {
-    id: "3",
-    tenantId: "1",
-    name: "Mie Goreng",
-    price: 10000,
-    description: "Mie goreng dengan sayuran dan bumbu pilihan.",
-    category: "Makanan",
-    available: false,
-    emoji: "🍜",
-  },
-  {
-    id: "4",
-    tenantId: "2",
-    name: "Es Teh",
-    price: 5000,
-    description: "Teh segar dengan es batu.",
-    category: "Minuman",
-    available: true,
-    emoji: "🧋",
-  },
-  {
-    id: "5",
-    tenantId: "2",
-    name: "Jus Jeruk",
-    price: 8000,
-    description: "Jus jeruk segar.",
-    category: "Minuman",
-    available: true,
-    emoji: "🍊",
-  },
-  {
-    id: "6",
-    tenantId: "3",
-    name: "Kentang Goreng",
-    price: 10000,
-    description: "Kentang goreng renyah.",
-    category: "Camilan",
-    available: true,
-    emoji: "🍟",
-  },
-  {
-    id: "7",
-    tenantId: "4",
-    name: "Roti Bakar",
-    price: 8000,
-    description: "Roti bakar dengan isian manis.",
-    category: "Camilan",
-    available: true,
-    emoji: "🍞",
-  },
-];
-
-const tenants = [
-  { id: "1", name: "Tenant 1" },
-  { id: "2", name: "Tenant 2" },
-  { id: "3", name: "Tenant 3" },
-  { id: "4", name: "Tenant 4" },
-];
+type Menu = { id: string; tenantId: string; name: string; price: number; description: string; category: string; available: boolean; emoji: string; tenant: string; imageUrl: string | null };
 
 export default function DetailMenuPage({
   params,
@@ -92,6 +14,8 @@ export default function DetailMenuPage({
   const router = useRouter();
 
   const [id, setId] = useState("");
+  const [menu, setMenu] = useState<Menu | null>(null);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"success" | "error" | "">("");
@@ -114,8 +38,36 @@ export default function DetailMenuPage({
     };
   }, [params]);
 
-  const menu = menus.find((item) => item.id === id);
-  const tenant = tenants.find((item) => item.id === menu?.tenantId);
+  useEffect(() => {
+    if (!id) return;
+    let active = true;
+
+    fetch(`/api/products/${id}`)
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Produk tidak ditemukan");
+        const result = await response.json();
+        return result.data;
+      })
+      .then((row) => {
+        if (!active || !row) return;
+        setMenu({
+          id: String(row.id),
+          tenantId: String(row.tenantId),
+          name: row.name,
+          price: Number(row.price),
+          description: row.description || "",
+          category: row.category || "Menu",
+          available: Boolean(row.available),
+          emoji: "🍽️",
+          tenant: row.tenant,
+          imageUrl: row.imageUrl,
+        });
+      })
+      .catch(() => { if (active) setMenu(null); })
+      .finally(() => { if (active) setLoading(false); });
+
+    return () => { active = false; };
+  }, [id]);
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("id-ID", {
@@ -179,6 +131,14 @@ export default function DetailMenuPage({
     );
   }
 
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#FAF7F2] text-[#493326]">
+        Memuat produk dari database...
+      </main>
+    );
+  }
+
   if (!menu) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#FAF7F2] p-6">
@@ -234,7 +194,7 @@ export default function DetailMenuPage({
             href={`/pelanggan/tenant/${menu.tenantId}`}
             className="transition hover:text-[#493326]"
           >
-            {tenant?.name ?? "Detail Tenant"}
+            {menu.tenant || "Detail Tenant"}
           </Link>
           <span>/</span>
           <span className="font-semibold text-[#493326]">{menu.name}</span>
@@ -266,7 +226,7 @@ export default function DetailMenuPage({
               </div>
 
               <p className="mt-7 text-sm font-semibold text-[#E99557]">
-                {tenant?.name ?? "Tenant JajanYuk"}
+                {menu.tenant || "Tenant JajanYuk"}
               </p>
 
               <h1 className="mt-2 text-3xl font-extrabold sm:text-4xl">

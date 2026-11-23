@@ -40,7 +40,7 @@ export default function OwnerLayout({
         </main>
 
         <footer className="border-t border-gray-200 bg-white px-6 py-4 text-center text-xs text-gray-500">
-          &copy; {new Date().getFullYear()} JajanYuk · Sistem Manajemen Kantin
+          &copy; JajanYuk · Sistem Manajemen Kantin
           Digital
         </footer>
       </div>

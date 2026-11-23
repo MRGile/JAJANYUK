@@ -1,26 +1,51 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const tenants = [
-  { id: 1, name: "Tenant 1", category: "Makanan berat", icon: "🍛", color: "bg-orange-100" },
-  { id: 2, name: "Tenant 2", category: "Minuman", icon: "🥤", color: "bg-amber-100" },
-  { id: 3, name: "Tenant 3", category: "Snack", icon: "🍟", color: "bg-yellow-100" },
-  { id: 4, name: "Tenant 4", category: "Makanan ringan", icon: "🥪", color: "bg-rose-100" },
-];
-
-const menus = [
-  { id: 1, name: "Nasi Ayam", tenant: "Tenant 1", price: 12000, icon: "🍗", color: "bg-orange-100" },
-  { id: 2, name: "Mie Goreng", tenant: "Tenant 2", price: 10000, icon: "🍜", color: "bg-amber-100" },
-  { id: 3, name: "Nasi Goreng", tenant: "Tenant 1", price: 13000, icon: "🍛", color: "bg-yellow-100" },
-];
+type Tenant = { id: number; name: string; category: string; icon: string; color: string };
+type Menu = { id: number; name: string; tenant: string; price: number; icon: string; color: string };
 
 export default function Dashboard() {
   const pathname = usePathname();
   const [search, setSearch] = useState("");
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [menus, setMenus] = useState<Menu[]>([]);
+
+  useEffect(() => {
+    fetch("/api/tenants")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Gagal memuat tenant");
+        const result = await response.json();
+        return Array.isArray(result.data) ? result.data : [];
+      })
+      .then((rows: Array<{ id: number; name: string }>) => setTenants(rows.map((tenant) => ({
+        id: tenant.id,
+        name: tenant.name,
+        category: "Tenant kantin",
+        icon: "🏪",
+        color: "bg-orange-100",
+      }))))
+      .catch(() => setTenants([]));
+
+    fetch("/api/products")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Gagal memuat produk");
+        const result = await response.json();
+        return Array.isArray(result.data) ? result.data : [];
+      })
+      .then((rows: Array<{ id: number; name: string; tenant: string; price: string | number }>) => setMenus(rows.map((menu) => ({
+        id: menu.id,
+        name: menu.name,
+        tenant: menu.tenant,
+        price: Number(menu.price),
+        icon: "🍽️",
+        color: "bg-orange-100",
+      }))))
+      .catch(() => setMenus([]));
+  }, []);
 
   const filteredMenus = menus.filter((menu) =>
     menu.name.toLowerCase().includes(search.toLowerCase())

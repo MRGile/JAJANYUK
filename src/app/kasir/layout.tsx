@@ -2,7 +2,8 @@
 "use client";
 
 import Link from "next/link";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, Suspense } from "react";
+import { usePathname } from "next/navigation";
 import { kasirAktif } from "./config";
 
 const menuItems = [
@@ -24,16 +25,12 @@ const menuItems = [
   },
 ];
 
-export default function KasirLayout({
+function KasirLayoutContent({
   children,
 }: {
   children: ReactNode;
 }) {
-  const [pathname, setPathname] = useState("/kasir");
-
-  useEffect(() => {
-    setPathname(window.location.pathname);
-  }, []);
+  const pathname = usePathname();
 
   const isActive = (href: string) => {
     if (href === "/kasir") return pathname === href;
@@ -159,5 +156,13 @@ export default function KasirLayout({
         </div>
       </nav>
     </div>
+  );
+}
+
+export default function KasirLayout({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<main className="min-h-screen bg-[#FAF7F2]" />}>
+      <KasirLayoutContent>{children}</KasirLayoutContent>
+    </Suspense>
   );
 }

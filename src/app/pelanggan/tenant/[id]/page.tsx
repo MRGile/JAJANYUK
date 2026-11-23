@@ -4,102 +4,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-const tenants = [
-  {
-    id: "1",
-    name: "Tenant 1",
-    category: "Makanan Berat",
-    description: "Menyediakan berbagai pilihan makanan berat.",
-    emoji: "🍛",
-  },
-  {
-    id: "2",
-    name: "Tenant 2",
-    category: "Minuman",
-    description: "Berbagai pilihan minuman segar.",
-    emoji: "🥤",
-  },
-  {
-    id: "3",
-    name: "Tenant 3",
-    category: "Snack",
-    description: "Aneka camilan untuk menemani waktu istirahat.",
-    emoji: "🍟",
-  },
-  {
-    id: "4",
-    name: "Tenant 4",
-    category: "Makanan Ringan",
-    description: "Pilihan makanan ringan dan jajanan.",
-    emoji: "🍞",
-  },
-];
-
-const menus = [
-  {
-    id: 1,
-    tenantId: "1",
-    name: "Nasi Ayam",
-    price: 12000,
-    description: "Nasi dengan lauk ayam.",
-    status: "Tersedia",
-    emoji: "🍗",
-  },
-  {
-    id: 2,
-    tenantId: "1",
-    name: "Nasi Goreng",
-    price: 13000,
-    description: "Nasi goreng dengan bumbu spesial.",
-    status: "Tersedia",
-    emoji: "🍛",
-  },
-  {
-    id: 3,
-    tenantId: "1",
-    name: "Mie Goreng",
-    price: 10000,
-    description: "Mie goreng dengan bumbu pilihan.",
-    status: "Habis",
-    emoji: "🍜",
-  },
-  {
-    id: 4,
-    tenantId: "2",
-    name: "Es Teh",
-    price: 5000,
-    description: "Minuman teh dingin.",
-    status: "Tersedia",
-    emoji: "🧋",
-  },
-  {
-    id: 5,
-    tenantId: "2",
-    name: "Jus Jeruk",
-    price: 8000,
-    description: "Minuman jeruk segar.",
-    status: "Tersedia",
-    emoji: "🍊",
-  },
-  {
-    id: 6,
-    tenantId: "3",
-    name: "Kentang Goreng",
-    price: 10000,
-    description: "Kentang goreng renyah.",
-    status: "Tersedia",
-    emoji: "🍟",
-  },
-  {
-    id: 7,
-    tenantId: "4",
-    name: "Roti Bakar",
-    price: 8000,
-    description: "Roti bakar dengan berbagai rasa.",
-    status: "Tersedia",
-    emoji: "🍞",
-  },
-];
+type Tenant = { id: string; name: string; category: string; description: string; emoji: string };
+type Menu = { id: number; tenantId: string; name: string; price: number; description: string; status: string; emoji: string };
 
 export default function DetailTenantPage({
   params,
@@ -107,6 +13,9 @@ export default function DetailTenantPage({
   params: Promise<{ id: string }>;
 }) {
   const [tenantId, setTenantId] = useState("");
+  const [tenant, setTenant] = useState<Tenant | null>(null);
+  const [menus, setMenus] = useState<Menu[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Semua");
 
@@ -128,11 +37,48 @@ export default function DetailTenantPage({
     };
   }, [params]);
 
-  const tenant = tenants.find((item) => item.id === tenantId);
+  useEffect(() => {
+    if (!tenantId) return;
+    let active = true;
+    Promise.all([
+      fetch(`/api/tenants/${tenantId}`).then((response) => response.ok ? response.json() : Promise.reject()),
+      fetch(`/api/tenants/${tenantId}/products`).then((response) => response.ok ? response.json() : Promise.reject()),
+    ])
+      .then(([tenantResult, productResult]) => {
+        if (!active) return;
+        const row = tenantResult.data;
+        setTenant(row ? {
+          id: String(row.id),
+          name: row.name,
+          category: "Tenant kantin",
+          description: row.description || "",
+          emoji: "🏪",
+        } : null);
+        setMenus((Array.isArray(productResult.data) ? productResult.data as Array<{ id: number; tenantId: number; name: string; price: string | number; description: string | null; available: boolean }> : []).map((menu) => ({
+          id: menu.id,
+          tenantId: String(menu.tenantId),
+          name: menu.name,
+          price: Number(menu.price),
+          description: menu.description || "",
+          status: menu.available ? "Tersedia" : "Habis",
+          emoji: "🍽️",
+        })));
+      })
+      .catch(() => {
+        if (!active) return;
+        setTenant(null);
+        setMenus([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [tenantId]);
 
   const tenantMenus = useMemo(
     () => menus.filter((menu) => menu.tenantId === tenantId),
-    [tenantId]
+    [menus, tenantId]
   );
 
   const filteredMenus = tenantMenus.filter((menu) => {
@@ -154,6 +100,14 @@ export default function DetailTenantPage({
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#FAF7F2] text-[#493326]">
         Memuat detail tenant...
+      </main>
+    );
+  }
+
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#FAF7F2] text-[#493326]">
+        Memuat tenant dari database...
       </main>
     );
   }
